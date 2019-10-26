@@ -212,9 +212,20 @@ uint8_t Adafruit_PWMServoDriver::readPrescale(void)
  *  @param  num One of the PWM output pins, from 0 to 15
  *  @return requested PWM output value
  */
-uint8_t Adafruit_PWMServoDriver::getPWM(uint8_t num) {
-  _i2c->requestFrom((int)_i2caddr, PCA9685_LED0_ON_L + 4 * num, (int)4);
-  return _i2c->read();
+ uint16_t Adafruit_PWMServoDriver::getPWM(uint8_t channel) {
+  byte regAddress = PCA9685_LED0_ON_L + (channel << 2);
+  _i2c->beginTransmission(_i2caddr);
+  _i2c->write(regAddress);
+  _i2c->endTransmission();
+
+  _i2c->requestFrom((uint8_t)_i2caddr, (uint8_t)4);
+  uint16_t phaseBegin = (uint16_t)_i2c->read();
+  phaseBegin |= (uint16_t)_i2c->read() << 8;
+  uint16_t phaseEnd = (uint16_t)_i2c->read();
+  phaseEnd |= (uint16_t)_i2c->read() << 8;
+  uint16_t retVal = phaseEnd - phaseBegin;
+
+ return retVal;
 }
 
 /*!
